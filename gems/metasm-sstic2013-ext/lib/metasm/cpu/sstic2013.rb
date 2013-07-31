@@ -1,0 +1,5 @@
+require 'metasm/main'
+require 'metasm/cpu/sstic2013/main'
+require 'metasm/cpu/sstic2013/decode'
+require 'metasm/cpu/sstic2013/render'
+require 'metasm/cpu/sstic2013/parse'

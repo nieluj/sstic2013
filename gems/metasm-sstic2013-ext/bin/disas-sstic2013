@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+require 'metasm'
+require 'metasm/cpu/sstic2013'
+
+if ARGV.size < 1 then
+  $stderr.puts "usage: disas-sstic2013 input [plugin]"
+  exit 0
+end
+
+input, plugin = ARGV.shift, ARGV.shift
+
+data = File.open(input, "rb").read
+
+exe = Metasm::Shellcode.decode(data, Metasm::Sstic2013.new)
+dasm = exe.disassembler
+dasm.load_plugin plugin if plugin
+
+exe.disassemble
+puts dasm

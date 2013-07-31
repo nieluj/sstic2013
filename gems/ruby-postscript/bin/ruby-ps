@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+require 'optparse'
+require 'ostruct'
+require 'ap'
+
+require 'postscript'
+
+def parse_args(args)
+  options                   = OpenStruct.new
+  options.execute           = true
+  options.break_on_start    = false
+  options.breakpoints       = [ :rdebug ]
+  options.show_pretty_print = false
+
+  opt_parser = OptionParser.new do |opts|
+    opts.banner = "Usage: ruby-ps [options] input.ps [postscript arguments]"
+    opts.separator ""
+    opts.separator "Specific options:"
+
+    opts.on("-p", "--pretty-print",
+            "Parse the specified file and pretty print its content on stdout") do |t|
+      options.execute = false
+      options.show_pretty_print = true
+    end
+
+    opts.on("-b", "--break", "Break on start") do |t|
+      options.break_on_start = true
+    end
+
+    opts.on("-c", "--breakpoints x,y,z", Array, "List of breakpoints (default: rdebug)") do |list|
+      options.breakpoints = list.map {|x| x.to_sym }.uniq
+    end
+
+    opts.on("-h", "--help", "Show usage") do
+      $stderr.puts opts
+      exit
+    end
+
+  end
+
+  opt_parser.parse!(args)
+
+  options.input_file = args.shift
+  unless options.input_file
+    $stderr.puts "Missing input file"
+    $stderr.puts opt_parser
+    exit
+  end
+
+  options
+end
+
+options = parse_args(ARGV)
+
+if options.execute then
+  debugger = Postscript::Debugger.new
+  debugger.break_next = options.break_on_start
+  debugger.breakpoints = options.breakpoints
+  ps = Postscript::Interpreter.new(options.input_file, ARGV, debugger)
+  ARGV.clear
+  ps.execute
+elsif options.show_pretty_print
+  Postscript::PP.pp(File.read(options.input_file))
+end
